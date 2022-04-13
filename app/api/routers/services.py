@@ -1,14 +1,14 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends
 
-from app.api.auth import get_authenticated_member
+from app.api.auth import get_authenticated_member, get_authenticated_member_as_doc
 from app.api.models import MemberResponseModel
 from app.api.models.services import CourtServiceRequestModel, CourtServiceResponseModel
-from app.api.models.subscriptions import SubscriptionRequestModel
+from app.api.models.subscriptions import SubscriptionRequestModel, SubscriptionResponseModel
+from app.db.documents.member import MemberDocument
 from app.service import create_service, get_all_services as get_all_court_services
-from app.subscriptions import subscribe_to_service as sub, get_all_subscriptions as get_all_subs, \
-    unsubscribe_from_service as unsub
+from app.subscriptions import unsubscribe_from_service as unsub, new_subscription
 
 services_router = APIRouter()
 
@@ -31,35 +31,21 @@ async def get_all_services():
 
 @services_router.get('/me/services', response_model=List[CourtServiceResponseModel])
 def get_services():
-    """
-    Return a list of services that I am elligable for
-    :return:
-    """
     return get_all_court_services()
 
 
-@services_router.get('/me/subscriptions')
-def get_all_subscriptions(member: MemberResponseModel = Depends(get_authenticated_member)):
-    """
-
-    :return:
-    """
-
-    return get_all_subs(member.id)
+@services_router.get('/me/subscriptions', response_model=List[SubscriptionResponseModel])
+def get_all_subscriptions(member: MemberDocument = Depends(get_authenticated_member_as_doc)):
+    return member.subscriptions
 
 
-@services_router.post('/me/subscriptions')
+@services_router.post('/me/subscriptions', response_model=Optional[SubscriptionResponseModel])
 def subscribe_to_service(service: SubscriptionRequestModel,
                          member: MemberResponseModel = Depends(get_authenticated_member)):
-    """
-    Subscribe to a service
-    """
-    sub(member.id, service.service_id)
+    new_sub = new_subscription(member.id, service.service_id)
+    return new_sub
 
 
 @services_router.delete('/me/subscription/{service_id}')
 def unsubscribe_from_service(service_id: str, member: MemberResponseModel = Depends(get_authenticated_member)):
-    """
-    Unsubs a member from a service
-    """
     unsub(member.id, service_id)

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime
 from enum import Enum
 
 from bson.objectid import ObjectId
@@ -52,10 +52,14 @@ class Bill(EmbeddedDocument):
 class SubscriptionDocument(EmbeddedDocument):
     _id = ObjectIdField(default=ObjectId)
     service = LazyReferenceField(ServiceDocument, null=False)
-    subscription_date = DateField(default=date.today())
+    subscription_date = DateTimeField(default=datetime.utcnow())
 
     @property
     def id(self):
+        return str(self.service.id)
+
+    @property
+    def service_id(self):
         return str(self.service.id)
 
 
