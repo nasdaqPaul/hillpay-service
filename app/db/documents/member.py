@@ -37,7 +37,7 @@ class Bill(EmbeddedDocument):
     amount = IntField(required=True)
 
     day = DateField()
-    month = StringField()
+    month = DateField()
     year = IntField()
 
     @property

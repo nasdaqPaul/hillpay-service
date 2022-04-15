@@ -7,6 +7,6 @@ class DarajaConfig(BaseSettings):
     passkey: str = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
     jws_secret: str = 'SomeRandomString'
     daraja_url: str = 'https://sandbox.safaricom.co.ke'
-    webhook_url: str = 'https://9183-105-59-42-87.ngrok.io'
+    webhook_url: str = 'https://afe0-105-160-24-154.ngrok.io'
 
 daraja_config = DarajaConfig()

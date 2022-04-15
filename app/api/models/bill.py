@@ -12,3 +12,4 @@ class BillResponseModel(BaseResponseModel):
     amount: int
 
     day: Optional[date] = Field(None)
+    month: Optional[date] = Field(None)
