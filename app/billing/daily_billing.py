@@ -40,8 +40,9 @@ def bill_daily():
                 today = date.today()
                 if member.bills:
                     for bill in member.bills:  # type: Bill
-                        if bill.day == today and bill.service.id == subscription.service.id:
-                            billed = True
+                        if bill.day:
+                            if bill.day.day == today.day and bill.service.id == subscription.service.id:
+                                billed = True
                 if billed:
                     continue
                 new_bill = Bill(service=subscription.service,

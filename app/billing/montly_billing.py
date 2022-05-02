@@ -19,13 +19,15 @@ def bill_this_month():
 
                 if member.bills:
                     for bill in member.bills:  # type: Bill
-                        if bill.month == today and bill.service.id == subscription.service.id:
-                            billed = True
+                        if bill.month:
+                            if bill.month.month == today.month and bill.service.id == subscription.service.id:
+                                billed = True
                 if billed:
                     continue
                 new_bill = Bill(service=subscription.service,
                                 amount=calculate_bill_amount(subscription, service), month=today)
                 member.bills.append(new_bill)
                 member.save()
+
 
 bill_this_month()
