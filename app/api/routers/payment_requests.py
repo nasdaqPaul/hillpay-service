@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Request
+from mongoengine.errors import DoesNotExist
 from pydantic.class_validators import List
 
 from app.api.auth import get_authenticated_member, get_authenticated_member_as_doc
@@ -6,6 +7,7 @@ from app.api.exceptions import BillInPaymentRequest as BillInPaymentRequestHTTPE
 from app.api.models import MemberResponseModel
 from app.api.models.payment_request import PaymentRequestResponseModel
 from app.api.ws import manager
+from app.billing.unbill import unbill
 from app.daraja.auth import verify_request_signature
 from app.daraja.daraja_requests import queue_stk_request
 from app.db.documents.member import MemberDocument
@@ -50,8 +52,31 @@ def request_payment(bill_items: List[str], member: MemberDocument = Depends(get_
 @payment_requests_router.post('/payment-request-results/{signature}')
 async def confirm_payment(signature: str, request: Request):
     req_body = await request.json()
-    print(req_body)
     signed_payload = verify_request_signature(signature)
-    payment_request = PaymentRequestDocument.objects.get(id=signed_payload['id'])
-    payment_request.delete()
-    await manager.send_json(signed_payload['memberId'], req_body)
+    try:
+        payment_request = PaymentRequestDocument.objects.get(id=signed_payload['id'])
+    except DoesNotExist:
+        return
+
+    pr_id = str(payment_request.id)
+    unbill(payment_request)
+    await manager.send_json(signed_payload['memberId'], {
+        "code": "unbill",
+        "payload": {
+            "paymentRequestId": pr_id
+        }
+    })
+
+
+@payment_requests_router.delete('/payment-requests/override/{id}')
+async def manual_unbill(id: str, member: MemberDocument = Depends(get_authenticated_member_as_doc)):
+    try:
+        unbill(PaymentRequestDocument.objects.get(id=id))
+        await manager.send_json(str(member.id), {
+            "code": "unbill",
+            "payload": {
+                "paymentRequestId": id
+            }
+        })
+    except DoesNotExist:
+        return

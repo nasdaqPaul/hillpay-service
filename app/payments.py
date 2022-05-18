@@ -22,7 +22,7 @@ def sublist(lst1, lst2):
     print('lst1', ls1)
     print('lst2', ls2)
 
-    return ls1 == ls2
+    return set(ls1) == set(ls2)
 
 
 def calculate_bill_request_amount(bills: List[Bill]):
